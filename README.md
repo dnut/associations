@@ -1,7 +1,7 @@
 # Associations
 Associations is a Python 3 module used to identify and analyze associations in any data set.
 
-Dependencies: NumPy, matplotlib, multiprocessing
+- **Dependencies**: NumPy, matplotlib, multiprocessing
 
 This is ***not*** compatible with Python 2.
 
