@@ -222,7 +222,7 @@ class Analysis():
 		fig = plt.gcf()
 		fig.set_size_inches(25, 15)
 		fig.savefig(
-			self.plot_dir() + cname + '.pdf',
+			self.plot_dir() + '/' + cname + '.pdf',
 			bbox_inches='tight',
 			dpi=100
 		)
