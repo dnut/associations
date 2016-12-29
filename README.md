@@ -6,7 +6,7 @@ Associations is a Python 3 module used to identify and analyze associations in a
 This is ***not*** compatible with Python 2.
 
 # Overview
-Here we can count occurrences with a histogram, find associations between different fields, and are provided tools that aid in the analysis of the resultant data.
+We can count occurrences with a histogram, find associations between different fields, and are provided tools that aid in the analysis of the resultant data.
 
 ## libassoc.py
 This file contains the most generic procedures that do not belong in any created classes. They are convenient procedures for Python's fundamental data structures.
