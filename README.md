@@ -3,9 +3,23 @@ Associations is a Python 3 module used to identify and analyze associations in a
 
 Associations was originally created to aid in the solving of a specific set of problems. I have not included that original implementation code to respect the employer's wishes. As you examine this module, you will see there are some aspects of it that could be made more encapsulated, efficient, concise, or generalized. Once I start working on a reference implementation, I will begin to resolve these issues. I urge you to make pull requests if you see anything that could be improved.
 
+## Installation
 - **Dependencies**: NumPy, matplotlib, multiprocessing
+- **Build Dependencies**: git (only for Arch Linux git package)
 
 This is ***not*** compatible with Python 2.
+### Universal
+```
+$ python setup.py sdist
+# python setup.py
+```
+
+### Arch Linux
+Run this in an empty directory
+```
+$ wget https://raw.githubusercontent.com/dnut/PKGBUILDs/master/assocations/python-associations-git/PKGBUILD
+$ makepkg -si
+```
 
 # Overview
 We can count occurrences with a histogram, find associations between different fields, and are provided tools that aid in the analysis of the resultant data.
