@@ -2,6 +2,7 @@ from itertools import chain
 from copy import copy
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 import textwrap
 from .libassoc import invert, istr, iint, pretty
 from .associations import Associator
@@ -35,6 +36,13 @@ class Analysis():
 			i = iint(s[0]) if isinstance(s, tuple) else iint(s)
 			return i if i != None else 999
 		return sorted(bins, key=value)
+
+	def plot_dir(self, folder='plots'):
+		if os.path.isfile(folder):
+			raise OSError('The selected folder name already exists as a file!')
+		if not os.path.isdir(folder):
+			os.makedirs(folder)
+		return folder
 
 	def prep_hist(self, field, other_field, notable=1, subgroup=''):
 		""" Filter out irrelevant data for plotting """
@@ -213,7 +221,11 @@ class Analysis():
 		cname = one +', '+ two + (' for ' + istr(subgroup) if subgroup else '')
 		fig = plt.gcf()
 		fig.set_size_inches(25, 15)
-		fig.savefig('../plots/' + cname + '.pdf', bbox_inches='tight', dpi=100)
+		fig.savefig(
+			self.plot_dir() + cname + '.pdf',
+			bbox_inches='tight',
+			dpi=100
+		)
 
 	def max_helper(self, one, two):
 		""" Record most associated specific pairs within the generic
