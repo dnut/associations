@@ -5,29 +5,30 @@ As you examine this module, you will see there are some aspects of it that could
 
 ## Installation
 - **Dependencies**: NumPy, matplotlib, multiprocessing
-- **Build Dependencies**: git (only for Arch Linux git package)
+- **Build Dependencies**: git (only for Arch Linux python-associations-git package)
 
 This is ***not*** compatible with Python 2.
 ### Universal
+Run this if you would like to install associations directly into Python without the use of a package manager. This should be compatible with any system.
 ```
 $ python setup.py sdist
 # python setup.py
 ```
 
 ### Arch Linux
-To install in Arch, you can download the source code here and install using the included PKGBUILD in python-associations. However, the version number will not always keep up with changes. Additionally, you would have to manually clone this repo or download the zip from github.com every time. I only recommend this PKGBUILD for testing (eg. if you are contributing to development) or if you are forking your own local version of the package.
-
-To install python-associations, cd into the python-associations directory and run this command:
-```
-makepkg -si
-```
-
-For regular use, I recommend installing the python-associations-git package because you can keep reusing the same PKGBUILD. It will automatically download the latest source code and update the version number based on the revision number. Simply download the PKGBUILD from my PKGBUILDs repository and use that to install python-associations-git.
+For Arch Linux users, I recommend installing the python-associations-git package because you can keep reusing the same PKGBUILD. It will automatically download the latest source code and update the version number based on the revision number. Simply download the PKGBUILD from my PKGBUILDs repository and use that to install python-associations-git.
 
 To install python-associations-git, run this in an empty directory:
 ```
 $ wget https://raw.githubusercontent.com/dnut/PKGBUILDs/master/assocations/python-associations-git/PKGBUILD
 $ makepkg -si
+```
+
+You can also download the source code here and install using the included PKGBUILD in python-associations. However, the version number will not always keep up with changes. Additionally, you would have to manually clone this repo or download the zip from github.com every time. I only recommend this PKGBUILD for testing (eg. if you are contributing to development) or if you are forking your own local version of the package.
+
+To install python-associations, cd into the python-associations directory and run this command:
+```
+makepkg -si
 ```
 
 # Overview
