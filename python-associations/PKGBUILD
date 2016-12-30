@@ -1,0 +1,22 @@
+pkgname=python-associations
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Identify and analyze associations in any data set."
+arch=('any')
+url='https://github.com/dnut/associations'
+license=('GPLv3')
+depends=('python>=3' 'python-multiprocess' 'python-numpy' 'python-matplotlib')
+conflicts=('python-associations-git')
+#md5sums=('SKIP')
+
+prepare() {
+	sh prepare.sh
+}
+
+build() {
+	python setup.py sdist
+}
+
+package() {
+	python setup.py install --root="$pkgdir/" --optimize=1
+}
