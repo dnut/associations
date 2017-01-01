@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import os
 import textwrap
 from .libassoc import invert, istr, iint, pretty
-from .associations import Associator
 
 class Analysis():
 	""" Ideally this class would implement totally generic methods
@@ -44,7 +43,7 @@ class Analysis():
 			os.makedirs(folder)
 		return folder
 
-	def prep_hist(self, field, other_field, notable=1, subgroup=''):
+	def prep_hist(self, field, other_field, notable=1, subpop=''):
 		""" Filter out irrelevant data for plotting """
 		bins = self.hist.valdicts_dict[field]
 		associations = self.assoc.report(field, other_field)
@@ -56,7 +55,7 @@ class Analysis():
 			# For non-time, remove excess bins without notable data
 			for key in associations:
 				try:
-					ratio = associations[key][frozenset(subgroup)]
+					ratio = associations[key][frozenset(subpop)]
 				except KeyError:
 					continue
 				# Only keep notable bins
@@ -74,7 +73,7 @@ class Analysis():
 		bins = self.bin_sort([s for s in bins if s in keep_of])
 		return bins, associations
 
-	def make_hist(self, field, other_field, notable=1, subgroup=''):
+	def make_hist(self, field, other_field, notable=1, subpop=''):
 		""" This method creates the data structure for a histogram plot
 		given the names of the fields we want to compare. This is done
 		manually because we are working with already existent bins.
@@ -89,7 +88,7 @@ class Analysis():
 		keep_f, values, hists = set(), [], []
 		skip, top = False, 0
 		bins, associations = self.prep_hist(
-			field, other_field, notable, subgroup
+			field, other_field, notable, subpop
 		)
 		bindex = invert(bins)
 		empty_things = np.zeros(len(bins))
@@ -116,7 +115,7 @@ class Analysis():
 					actual = myfield
 			# Gather association ratio for combination
 			try:
-				ratio = associations[key][frozenset(subgroup)]
+				ratio = associations[key][frozenset(subpop)]
 			except KeyError:
 				skip = True
 			if skip == True:
@@ -173,13 +172,13 @@ class Analysis():
 		self.plot_counter += 1
 
 	def nice_plot_assoc(self, one, two, title=False, xlabel=False,
-		                bins=False, notable=1.5, subgroup='', force=False):
+		                bins=False, notable=1.5, subpop='', force=False):
 		""" Try plot with arbitrary limitation first, change if needed. """
 		while notable > 1:
 			# This means floats such as 0.9999999999999997 will
 			# be excluded, but we don't want < 1.1 anyway.
 			bad = self.plot_assoc(
-				one, two, title, xlabel, bins, notable, subgroup
+				one, two, title, xlabel, bins, notable, subpop
 			)
 			if bad == 'high':
 				notable += 0.1
@@ -192,11 +191,11 @@ class Analysis():
 		else:
 			if force:
 				self.plot_assoc(
-					one, two, title, xlabel, bins, notable, subgroup, force=True
+					one, two, title, xlabel, bins, notable, subpop, force=True
 				)
 
 	def plot_assoc(self, one, two, title=False, xlabel=False,
-		           bins=False, notable=2, subgroup='', force=False):
+		           bins=False, notable=2, subpop='', force=False):
 		""" Plot associations between values one and two. Extract a
 		more complete data set from the histogram and make the plot.
 		"""
@@ -209,7 +208,7 @@ class Analysis():
 			bins = self.hist.valists_dict[one]
 		ylabel = 'Association Ratio'
 		bins, names, top, data = self.make_hist(
-			one, two, notable, subgroup=subgroup
+			one, two, notable, subpop=subpop
 		)
 		log = True if top > 10 else False
 		if not force:
@@ -218,7 +217,7 @@ class Analysis():
 			if len(data) > 8:
 				return 'high'
 		self.plot_hist(title, xlabel, ylabel, bins, names, *data, log=log)
-		cname = one +', '+ two + (' for ' + istr(subgroup) if subgroup else '')
+		cname = one +', '+ two + (' for ' + istr(subpop) if subpop else '')
 		fig = plt.gcf()
 		fig.set_size_inches(25, 15)
 		fig.savefig(

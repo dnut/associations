@@ -7,19 +7,17 @@ from .libassoc import pretty
 
 
 class Associator():
-	""" This class uses some lower level numpy operations rather than
-	the Histogram() interface in order to optimize efficiency.
+	""" Find all associations within the most specific subpopulations
+	possible. Feed it a simpler histogram to test broader
+	subpopulations.
 	"""
 	def __init__(self, histogram, desired, notable=1, significant=3):
 		# Ratio with average (or inverse) to be included.
 		self.notable = notable
 		# Number of items to be statistically significant.
 		self.significant = significant
-		self.assoc, self.subgroups = defaultdict(dict), defaultdict(dict)
-		self.memo = set()
+		self.pairs, self.subpops = defaultdict(dict), defaultdict(dict)
 		self.hist = histogram.simplify(*desired)
-		# Reduce to existent combinations, represent as array of index lists.
-		self.relevant = np.transpose(np.nonzero(self.hist.histogram))
 
 	def convert(self, combo):
 		""" Convert list of indices to strings. Useful for testing. """
@@ -29,174 +27,102 @@ class Associator():
 			except TypeError:
 				return None
 		return [get(i, j) for i, j in enumerate(tuple(combo))]
-		
-	def overall_ratios(self, i, sit):
-		""" Calculate overall ratios that we can later compare to specific
-		situations' ratios. See docstring for find() for context.
-		
-		First we isolate only one element of a combination, element i.
-		We look at the total number of counts for this specific combination
-		for every possible i, and add them together into specific_total.
-		
-		Then, we iterate through all the other fields. For each field, we
-		sum the total number of counts for all possible values of both that
-		field and i (larger than specific_total). We then divide specific_total
-		by that value, creating a ratio for every field (except i) in a list.
+
+	def add(self, pair_type, pair, subpop, ratio):
+		""" Add new association ratio results into both data
+		structures as long as the ratio meets notability requirement.
 		"""
-		sit_index = copy(sit)
-		# specific value for every field except i, which covers all possible i
-		sit_index[i] = slice(0, len(self.hist.valists[i]))
-		specific_total = np.sum(self.hist.histogram[sit_index])
-		overall_ratios = []
-		for other_field in range(len(sit)):
-			if i == other_field:
-				overall_ratios.append(None)
-			else:
-				broad_index = copy(sit_index)
-				broad_index[other_field] = slice(
-					0, len(self.hist.valists[other_field])
-				)
-				# specific_total / (total for all i and all other_field)
-				overall_ratios.append(
-					specific_total / np.sum(self.hist.histogram[broad_index])
-				)
-		return overall_ratios
-
-	def test(self, sit, other_field, overall_ratios):
-		""" Calculate association ratio between other_field and 
-		main_field (relevant info for main_field is provided by
-		overall_ratios).
-
-		sit: specific situation (eg. amputation, fatality, white, male)
-		other_field: field we isolate here (eg. fatality)
-		overall_ratios: ratios calculated for chosen main_field
-			(eg. diag - amputation)
-		
-		1. Find our_total = total number of (amputation, white, male)
-		2. Find ratio = likelihood of (amputation, fatality, white, male)
-			within broad group of (amputation, white, male)
-		3. Find factor = above likelihood divided by more general likelihood.
-			More general likelihood comes from overall_ratios, defined as:
-			(fatality, white, male) / (white, male)
-		
-		factor: Association ratio between amputation and fatality.
-		"""
-		# Add slices to index for 1D self.hist.histogram instead of single value
-		sit_index = copy(sit)
-		# Total occurrences for specific i but all other_field
-		sit_index[other_field] = slice(0, len(self.hist.valists[other_field]))
-		our_total = np.sum(self.hist.histogram[sit_index])
-		# (# of (specific i, all other_field)) / (# of (all i, all other field))
-		ratio = float(self.hist.histogram[tuple(sit)]) / our_total
-		factor = ratio / overall_ratios[other_field]
-		return factor, factor > self.notable or factor < 1/float(self.notable)
-
-	def add(self, sit, one, two, factor):
-		""" Add identified association. """
-		assoc = frozenset((
-			self.hist.valists[one][sit[one]],
-			self.hist.valists[two][sit[two]]
-		))
-		assoc_type = frozenset((
-			self.hist.ordered_fields[one],
-			self.hist.ordered_fields[two]
-		))
-		subgroup = frozenset([
-			self.hist.valists[m][n] for m, n in 
-			enumerate(sit) if m != one and m != two
-		])
-		subgroup_type = frozenset([
-			self.hist.ordered_fields[m] for m, n in
-			enumerate(sit) if m != one and m != two
-		])
-		# We can't use defaultdict for this because of multiprocessing.
-		self.assoc[assoc_type].setdefault(assoc, {})[subgroup] = factor
-		self.subgroups[subgroup_type].setdefault(subgroup, {})[assoc] = factor
+		if (ratio > 1 and ratio < self.notable) \
+		  or (ratio < 1 and 1/ratio < self.notable):
+			return
+		subpop = frozenset(subpop)
+		assoc = frozenset(pair)
+		assoc_type = frozenset(pair_type)
+		subpop_type = frozenset(self.hist.field_index[spec] for spec in subpop)
+		self.pairs[assoc_type].setdefault(assoc, {})[subpop] = ratio
+		self.subpops[subpop_type].setdefault(subpop, {})[assoc] = ratio
 
 	def find(self):
 		""" Find the association ratio for every possible combination
-		of field values for a given set of field names. See README.md
-		for more information about the theory behind this method.
+		of field values for a given set of field names. 
 
-		self.relevant: every existent combination for general field
-			names (eg. diag, disposition, race, sex)
-		combo: specific combination of field values (eg. amputation,
-			fatality, white, male)
-		main_field: First field being isolated, we'll swap every value
-			here (eg. try all diagnoses, not just amputation).
-		other_field: other field tested for association with main_field
-			using the specific value for other_field found in combo
-			(eg. fatality)
-		situation: Excluding main field (eg. None, fatality, white,
-			male)
-		sit: Version of situation being tested (eg. abrasion,
-			fatality, white, male)
-		overall_ratios: Broad likelihoods for each other_field for all
-			possible main_field values combined.
-			- (fatality, white, male) / (fatality, white)
-			- (fatality, white, male) / (fatality, male)
-			- (fatality, white, male) / (white, male)
+		The algorithm is explained here (not the theory). See README.md
+		for more information about the theory/math behind this method.
 
-		1. Select combo (eg. amputation fatal white male)
-		2. Select main field (eg. diag (from amputation)).
-		3. Calculate overall_ratios for all possible main_fields (diags).
-		4. Loop through every possible main_field.
-		5. Select other_field (eg. fatality).
-		6. Run test() to find association ratio.
-		7. Add result if notable.
+		eg. self.hist.fields = ['diag', 'disposition', 'race', 'sex']
 
-		See docstring for test() for more information.
+		{ Main for loop:
+		Iterate through all the pair_types of fields
+			- (diag, disposition), (diag, sex), etc.
+		1. Identify subpop_type.
+			- if pair_type is (diag, disp) then subpop_type is (race, sex)
+		2. simple_subpops_hist = Simplify n-dimensional histogram to
+			(n - 2)-dimensional histogram, all pairs are combined so
+			we have the totals for every type of subpopulation.
+			- histogram fields are now only (race, sex), representing all
+				(diag, disp) combined.
+		{ First nested for loop:
+		Iterate through every existent subpopulation, as determined
+			by self.hist.nonzeros().
+			- eg. (white, male)
+		subtotal = comes from nonzeros(): total within subpop
+			- eg. total number of white males
+		1. subpop_hist = Slice (not simplify) 2D histogram out of
+			main histogram to include only occurrences for this
+			subpopulation. It has one dimension for each field in pair.
+			- eg. 2D hist with fields (diag, disp)
+			- eg. only (white, male) occurrences represented
+		2. mini_hists = Create list with 1D hist for each field in
+			pair_type.
+			- eg. 1D diag histogram for every diag within subpop,
+			and 1D disp histogram for every disp within subpop
+		{ Second nested for loop:
+		Iterate through every possible pair values for pair_type
+			- eg. (amputation, fatality) for (diag, disp)
+		1. totals = Get the total number within this subpopulation for
+			each pair item from mini_hists
+			- eg. total number of amputations and total number of
+			fatalities among (white, male)
+		2. Use general formula to calculate association ratio.
+			                (fatal amputations in w,m) * (all w,m)
+			- eg. ratio = ------------------------------------------
+			              (fatalities in w,m) * (amputations in w,m)
+		3. Record value with self.add_new.
+		} } }
+		Return all associations with both data structures: pairs and subpops
 		"""
-		c, memo = 0, set()
-		for combo in self.relevant:
-			# Isolate each main_field to test all of its possible values.
-			for main_field in range(len(combo)):
-				# Label situation with a tuple setting main_field to None since
-				# we will compare every possible value for the main_field.
-				situation = tuple(combo)[:main_field] + (None,) \
-				            + tuple(combo)[main_field+1:]
-				# Label exists so we can memoize to avoid redundancy.
-				if situation in memo: continue
-				memo.add(situation)
-				# Initialize with the first possible value for main_field.
-				sit = list(situation)
-				sit[main_field] = 0
-				overall_ratios = self.overall_ratios(main_field, sit)
-				# Try every possible value for main_field in the situation sit
-				for _ in self.hist.valists[main_field]:
-					# Test chosen value for main_field against each other_field
-					for other_field in range(len(sit)):
-						# Require some degree of statistical significance.
-						if main_field == other_field \
-								or self.hist.histogram[tuple(sit)] \
-								< self.significant:
-							continue
-						# Skip statistically equivalent duplicates.
-						spec_sit = tuple(sit)[:other_field] \
-						           + (None,) \
-						           + tuple(sit)[other_field+1:]
-						if spec_sit in memo: 
-							continue
-						# Determine relative frequency
-						factor, hit = self.test(
-							sit, other_field, overall_ratios
-						)
-						if hit:
-							self.add(sit, main_field, other_field, factor)
-							c += 1
-					sit[main_field] += 1
-		return self.assoc, self.subgroups
+		for pair_type in combinations(self.hist.fields, 2):
+			subpop_type = [f for f in self.hist.fields if f not in pair_type]
+			simple_subpops_hist = self.hist.simplify(*subpop_type)
+			for subpop, subtotal in simple_subpops_hist.nonzeros():
+				if subtotal < self.significant:
+					continue
+				subpop_hist = self.hist.slice(*subpop)
+				mini_hists = [
+					subpop_hist.simplify(field_type) for field_type in pair_type
+				]
+				for pair, pair_total in subpop_hist.nonzeros():
+					if pair_total < self.significant:
+						continue
+					totals = [mini_hists[i].get(f) for i, f in enumerate(pair)]
+					assoc_ratio = pair_total * subtotal / (totals[0] * totals[1])
+					self.add(pair_type, pair, subpop, assoc_ratio)
+		return self.pairs, self.subpops
 
 
 class Associations():
-	""" This class contains all results from all searches. """
+	""" This class contains all results from all searches. It exists
+	separately from Associator() so we can pass Associator() objects
+	into a multiprocessing pool and capture their results with
+	callback routines.
+	"""
 	def __init__(self, hist):
 		#{pair_type:
-		#	{frozenset(assoc_pair): {frozenset(subgroup/population): factor}}}
+		#	{frozenset(assoc_pair): {frozenset(subpop/population): factor}}}
 		self.pairs = dict(dict(dict()))
-		#{subgroup_type:
-		#	{frozenset(subgroup/population): {frozenset(assoc_pair): factor)}}
-		self.subgroups = dict(dict(dict()))
+		#{subpop_type:
+		#	{frozenset(subpop/population): {frozenset(assoc_pair): factor)}}
+		self.subpops = dict(dict(dict()))
 		self.hist = hist
 	
 	def add(self, data, single=False):
@@ -205,11 +131,11 @@ class Associations():
 		"""
 		if single:
 			self.merge(self.pairs, data[0])
-			self.merge(self.subgroups, data[1])
+			self.merge(self.subpops, data[1])
 			return
 		for datum in data:
 			self.merge(self.pairs, datum[0])
-			self.merge(self.subgroups, datum[1])
+			self.merge(self.subpops, datum[1])
 
 	def merge(self, big, small):
 		""" Directly merges dictionary data structures as lower level
@@ -225,10 +151,10 @@ class Associations():
 	def find_all(self, specificity=(0, 1), notable=1):
 		""" Find all associations for all possible field combinations.
 		Pool worker processes to handle every possible field combination.
-		specificity: how specific of subgroups to use
-			- (0, 1) means subgroup is set to (), so entire population
-			- (0, 2) extends to subgroups with a single field (diag)
-			- (2, 3) only look at 2-field subgroups, eg. (diag, disposition)
+		specificity: how specific of subpops to use
+			- (0, 1) means subpop is set to (), so entire population
+			- (0, 2) extends to subpops with a single field (diag)
+			- (2, 3) only look at 2-field subpops, eg. (diag, disposition)
 		"""
 		self.field_index = self.hist.field_index
 		if isinstance(specificity, int):
@@ -257,7 +183,7 @@ class Associations():
 		can be generic (eg 'age' and 'season'), specific (eg. ages
 		'20 - 24' and 'summer'), or a mix of generic and specific.
 
-		specificity: How specific of subgroups to report. Do we want
+		specificity: How specific of subpops to report. Do we want
 		the association between white and summer for all male 20-24
 		year olds that got head injuries (specificity = 3), or just
 		the general association between 20-24 year olds and summer
@@ -283,8 +209,8 @@ class Associations():
 			return search(one, two)
 		else: return self.pairs[frozenset({one, two})]
 
-	def subgroup_report(self, *args):
-		""" Provide a subgroup (eg. white males age 20-24) and report
+	def subpop_report(self, *args):
+		""" Provide a subpop (eg. white males age 20-24) and report
 		all Associations discovered for that group. Must be either
 		entirely specific (male, summer) or entirely generic (sex, season)
 		"""
@@ -299,6 +225,6 @@ class Associations():
 		if gen and spec:
 			raise ValueError('Must be either fully generic or fully specific.')
 		elif gen:
-			return self.subgroups[frozenset(args)]
+			return self.subpops[frozenset(args)]
 		elif spec:
-			return self.subgroups[frozenset(specs)][frozenset(args)]
+			return self.subpops[frozenset(specs)][frozenset(args)]

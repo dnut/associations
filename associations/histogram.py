@@ -116,26 +116,71 @@ class Histogram():
 		self.field_index_int = dict(
 			(key, i) for i, dict in enumerate(self.valdicts) for key in dict
 		)
+		# Array of indices for all nonzero elements (occurred at least once)
+		self.nonzero_indices = np.transpose(np.nonzero(self.histogram))
 
 	def simplify(self, *fields):
-		""" Reduce number of dimensions by summing all values for
-		non-notable dimensions. Limit only to provided field name
-		strings. Return new Histogram() object.
+		keep = set(self.fieldict[field] for field in fields)
+		rm = tuple(i for i in range(len(self.fields)) if i not in keep)
+		hist = self.histogram.sum(rm)
+		return self.reduce(hist, keep, fields)
 
-		fields: string representations of field names (eg. 'diag').
+	def reduce(self, array, indices, fields):
+		""" Helper function for simplify and slice. Feed it the new
+		numpy array and indices for the fields being kept, return
+		Histogram() object.
 		"""
-		hist = self.histogram.sum(tuple(
-			i for i, s in enumerate(self.ordered_fields) if s not in fields)
-		)
-		ordered = [field for field in fields if field in self.ordered_fields]
-		vl = [
-			vals for i, vals in enumerate(self.valists)
-			if self.ordered_fields[i] in fields
-		]
-		valdicts = [dict((val, i) for i, val in enumerate(subv)) for subv in vl]
-		new_hist = Histogram(None, fields, ordered, hist, vl, valdicts)
+		ordered, valists, valdicts = [], [], []
+		for i in indices:
+			ordered.append(self.ordered_fields[i])
+			valists.append(self.valists[i])
+			valdicts.append(self.valdicts[i])
+		new_hist = Histogram(None, ordered, ordered, array, valists, valdicts)
 		new_hist.useful_stuff()
 		return new_hist
+
+	def slice(self, *values):
+		""" Reduce number of dimensions by only looking at a specific
+		situation as defined by values. Limit to only non-specified
+		dimensions. Returns new Histogram() object.
+
+		This is similar to simplify() but serves a very different
+		purpose because it does not account for all occurrences.
+
+		For example, if we have a Histogram() for (sex, weekday)
+		and we want to slice it for all males, we get this transition:
+		(1 male on tuesday, 2 female on tuesday) turns into:
+		(1 on tuesday)
+		"""
+		rm, keep, pre_slice, slicer, fields = set(), [], {}, [], []
+		for val in values:
+			index = self.field_index_int[val]
+			rm.add(index)
+			pre_slice[index] = self.valdicts[index][val]
+		for i in range(len(self.fields)):
+			if i in rm:
+				slicer.append(pre_slice[i])
+			else:
+				keep.append(i)
+				fields.append(self.ordered_fields[i])
+				slicer.append(slice(0, len(self.valists[i])))
+		hist = self.histogram[slicer]
+		return self.reduce(hist, keep, fields)
+
+	def nonzeros(self, fast=False):
+		""" Generator function to iterate through nonzero values.
+		fast: yield only counts and no field strings
+		"""
+		for index in self.nonzero_indices:
+			if isinstance(self.histogram, np.int64):
+				yield '', self.histogram
+			elif fast:
+				yield self.histogram[index]
+			else:
+				yield (
+					[alist[index[i]] for i, alist in enumerate(self.valists)],
+					self.histogram[tuple(index)]
+				)
 
 	def get(self, *entries):
 		""" entries: string names for field values (eg. 'Male').

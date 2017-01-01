@@ -28,7 +28,7 @@ You can also download the source code here and install using the included PKGBUI
 
 To install python-associations, cd into the python-associations directory and run this command:
 ```
-makepkg -si
+$ makepkg -si
 ```
 
 # Overview
@@ -69,7 +69,7 @@ Knowing that white males are injured on Tuesday more frequently than black males
 
 As another example, if we want to find the association between amputations and fatalities (diagnosis and disposition), we need to take the same approach. While the likelihood that an amputation is fatal is valuable information, we are more interested in the relative fatality of different diagnoses. Amputations may have a very low likelihood of fatality, but we must compare it to the likelihood that any other diagnosis leads to fatality before we discover whether amputations are relatively likely to be fatal. Therefore, we must take into consideration the extreme infrequency of fatalities in general to get a standardized numerical representation of how associated each field is.
 
-There are two approaches to resolve our dilemma that are mathematically equivalent. One approach is to divide the number of fatal amputations by the number of amputations with any disposition, which yields the likelihood that an amputation is fatal. Then we divide that by the likelihood that any diagnosis is fatal (total fatalities / total of everything) and that yields the association ratio between amputation and fatality.
+There are two approaches to resolve our dilemma that are mathematically equivalent. One approach is to divide the number of fatal amputations by the number of amputations with any disposition, which yields the likelihood that an amputation is fatal. But we want to normalize this likelihood by scaling it according to the likelihood that anything my be fatal. To do so, we divide them (total fatalities / total of everything) and that yields the association ratio between amputation and fatality.
 
 Identical results would be reached by first dividing fatal amputations by all fatalities (likelihood that a fatality is caused by amputation) and then dividing that by the average likelihood that an amputation is the cause of any disposition (total amputations / total of everything). This results in the exact same association ratio as the first approach.
 
@@ -77,31 +77,28 @@ Both approaches are the same algorithm run in opposite directions. They are also
 ```
 association between amputations and fatalities = (fatal amputations)*(total of everything) / (fatalities)*(amputations)
 ```
-Since we must also be able to examine the associations within complex subgroups/subpopulations, we approach the problem by looking at a field name combination (diag, disposition, sex, weekday) and finding the associations for any two values for any two of the fields. We start out with a general combination that we know exists (amputation, fatality, male, Tuesday) and work with every association pair and subgroup within that combination. We could do it in reverse, by looking first at every (diag, disposition) association within every (sex, weekday) population, and that would allow us to use the general formula with minimal histogram reshaping, but it would force us to test many orders of magnitude more combinations than actually exist in the data set.
+Originally, for efficiency, I used a specialized version of the aforementioned algorithm (calculate likelihoods then divide) in order to naturally cache totals and subtotals for multiple situations. Unfortunately, this led to a very complex and confusing algorithm.
 
-For efficiency, we are forced to limit ourselves to actual combinations that do exist and cycling through different associations within that combination. Likewise, if we wanted to use the general formula, we would have to either reshape our histogram four times for every association ratio or keep several histograms cached at all times (as many as several dozen). Instead, by using an adapted version of the two step algorithm described above, we can calculate broad ratios for many types of subgroups at once and reuse them several times. This increases code complexity, but brings execution time down from minutes or hours to seconds or minutes.
+To keep the algorithm simple, I have written a new one optimized to use the general formula as efficiently as possible. I have actually gotten it to be more efficient than the original algorithm. This algorithm is significantly less complex. It is more maintainable and easier to understand and use, so it is favored.
 
-I have a rough idea of a way to optimize the efficiency of an algorithm using the general formula to reduce code complexity without hurting overall efficiency, but the inclusion of subgroups would make it a time intensive process with a lot of testing and benchmarking, and I simply have not yet found the time to work on this.
+I still see some potential to optimize a few places in the algorithm to improve efficiency even further, but this would require a lot of benchmarking and will probably not be a huge improvement, so it is not my top priority.
+
 
 | Attribute        | Description |
 | ---------------- | ----------- |
 | ```notable```    | Minimum association ratio (or inverse) to be included.|
 | ```significant```| Minimum number of occurrences (statistical significance).|
 | ```assoc```      | Associations organized by association then subgroup.|
-| ```subgroups```  | Associations organized by subgroup then association.|
-| ```memo```       | Record examined situations to avoid redundancy.|
+| ```subpops```    | Associations organized by subgroup then association.|
 | ```hist```       | ```Histogram()``` object to extract data from.|
-| ```relevant```   | All instances of combination that exist.|
 
 | Method                | Description |
 | --------------------- | ----------- |
-| ```overall_ratios()```| Find general likelihoods (eg. fatality for any diagnosis, not just amputation) |
-| ```test()```          | Find association ratio given overall_ratios and histogram.|
 | ```add()```           | Save association ratio.|
 | ```find()```          | Find the association ratio for every field value combination among a specific field name combination.|
 
 ### Associations()
-Attributes: self.pairs and self.subgroups contain all association ratios.
+Attributes: self.pairs and self.subpops contain all association ratios.
 ```python
 >>> self.pairs
 {
@@ -113,7 +110,7 @@ Attributes: self.pairs and self.subgroups contain all association ratios.
 }
 ```
 ```python
->>> self.subgroups
+>>> self.subpops
 {
 	subgroup_type: {
 		frozenset(subgroup/subpopulation): {
