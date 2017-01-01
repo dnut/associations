@@ -62,6 +62,8 @@ The primary job of a ```Histogram()``` object is to traverse a CSV file and crea
 ## associations.py
 Contains two classes that serve to identify associations in a ```Histogram()```. ```Associator()``` finds associations for a specific field combination and ```Associations()``` uses ```Associator()``` objects to find all associations.
 
+```Associator()``` is a distinct class rather than integrating its methods into ```Associations()``` because ```Associations()``` uses multiprocessing to dramatically improve execution time on multi-core systems, and it needs relatively isolated objects to be passed to subprocesses. This implementation is intended to be superior to the redundancy of many ```Associations()``` objects or the complexity of queues and pipes without hurting code legibility or efficiency.
+
 ### Associator()
 The associator object identifies associations between different field values (eg. fatalities and amputations) by comparing one group to a larger group that encompasses it. 
 

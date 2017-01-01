@@ -22,7 +22,7 @@ Further encapsulate Histogram() object by providing the following:
 - Histogram().nonzeros()
 - Histogram().nonzero_indices
 
-## 0.2.1 - Second Release (2017-01-01)
+## 0.2.1 - Initial Beta Release (Release 2) (2017-01-01)
 ### Bug Fixes
 Reintroduce support for Associator().notable and Associator().significant.
 ### Improvements
