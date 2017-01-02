@@ -4,6 +4,8 @@ Associations is a Python 3 module used to identify and analyze associations in a
 As you examine this module, you will see there are some aspects of it that could be made more encapsulated, efficient, concise, or generalized. Once I start working on a reference implementation, I will begin to resolve these issues. I urge you to make pull requests if you see anything that could be improved.
 
 ## Installation
+The latest release can be found [here](https://github.com/dnut/associations/releases/latest). [This](https://github.com/dnut/associations/archive/master.zip) is a direct download link for the development version (latest revision, not latest release).
+
 - **Dependencies**: NumPy, matplotlib, multiprocessing
 - **Build Dependencies**: git (only for Arch Linux python-associations-git package)
 
@@ -16,7 +18,7 @@ $ python setup.py sdist
 ```
 
 ### Arch Linux
-For Arch Linux users, I recommend installing the python-associations-git package because you can keep reusing the same PKGBUILD. It will automatically download the latest source code and update the version number based on the revision number. Simply download the PKGBUILD from my PKGBUILDs repository and use that to install python-associations-git.
+If you would like to install the latest development version (latest revision), you should install the python-associations-git package. All you have to do is download the PKGBUILD and the ABS will automatically download the source and install the package. You can keep reusing the same PKGBUILD. It will automatically update the version number based on the revision. 
 
 To install python-associations-git, run this in an empty directory:
 ```
@@ -24,12 +26,14 @@ $ wget https://raw.githubusercontent.com/dnut/PKGBUILDs/master/assocations/pytho
 $ makepkg -si
 ```
 
-You can also download the source code here and install using the included PKGBUILD in python-associations. However, the version number will not always keep up with changes. Additionally, you would have to manually clone this repo or download the zip from github.com every time. I only recommend this PKGBUILD for testing (eg. if you are contributing to development) or if you are forking your own local version of the package.
+If you would like to install the latest release, you should install the python-associations package. You can download it [here](https://github.com/dnut/associations/releases/latest) and install using the included PKGBUILD. To update this package, you will need to download the release from that page.
 
 To install python-associations, cd into the python-associations directory and run this command:
 ```
 $ makepkg -si
 ```
+
+You can also download the source code for the latest revision manually and install using the included PKGBUILD. I only recommend this if you are either contributing to development or forking your own local version of the package.
 
 # Overview
 We can count occurrences with a histogram, find associations between different fields, and are provided tools that aid in the analysis of the resultant data.
