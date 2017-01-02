@@ -50,12 +50,16 @@ The primary job of a ```Histogram()``` object is to traverse a CSV file and crea
 | ```valdicts_dict```  | Dict of valdicts keyed by field names.|
 | ```field_index```    | Keys field values to field names.|
 | ```field_index_int```| Keys field values to valists/valdicts index (int).|
+| ```nonzero_indices```| Indices for all nonzero values in the histogram.|
 
 | Method               | Description |
 | -------------------- | ----------- |
 | ```count()```        | Count all occurrences for every possible situation| 
 | ```useful_stuff()``` | Expose the string values for quantitative internal data structure.|
-| ```simplify()```     | Return new ```Histogram()``` with fewer dimensions by summing undesired dimensions.|
+| ```reduce()```       | Return new ```Histogram()``` with provided numpy array. Used by ```simplify()``` and ```slice()```.|
+| ```simplify()```     | Return new ```Histogram()``` with fewer dimensions by summing undesired dimensions. For example, create a histogram that drops the sex dimension. All remaining fields have combined value for both male and female.|
+| ```slice()```        | Return new ```Histogram()``` with fewer dimensions by isolating a specific situation. For example, create a histogram representing only males with no data for females.|
+| ```nonzeros()```     | Generator function that iterates through every nonzero element, optionally providing string representations.|
 | ```get()```          | Retrieve count for any field value combination.| 
 
 
