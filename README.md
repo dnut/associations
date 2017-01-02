@@ -168,5 +168,6 @@ Analyze data from ```Histogram()``` and ```Associations()```.
 | ```tables```            | List of table strings.|
 
 | Method                  | Description |
+| ----------------------- | ----------- |
 | ```table()```           | Draw ascii table.|
 | ```table_section()```   | Format data into a section to be interpreted by ```table()```.|
