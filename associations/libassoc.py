@@ -1,6 +1,21 @@
 import numpy as np
+import os
 import re
 
+
+def make_dir(*folders):
+	""" Check for folder's existence. Makes if nonexistent. Raise
+	OSerror if collision with file. Compatible with nested folders.
+	If you want to make path/to/folder, use like this:
+	make_dir(path, to, folder)
+
+	This expands on os.makedir() by not worrying about directory
+	collisions and having better cross-platform compatibility.
+	"""
+	path = os.path.join(*folders)
+	if not os.path.isdir(path):
+		os.makedirs(path)
+	return path
 
 def pretty(obj):
 	""" Useful for testing.	Courtesy of Edward Betts:

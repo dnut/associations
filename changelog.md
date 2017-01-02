@@ -27,3 +27,10 @@ Further encapsulate Histogram() object by providing the following:
 Reintroduce support for Associator().notable and Associator().significant.
 ### Improvements
 Clean up excess code, removed old methods, renamed new methods to take their place.
+
+## ???
+### New Features
+make_dir()
+### Improvements
+- Table methods have been split off from Analysis() into its own class, AsciiTable().
+- Use make_dir() and os.path.join() for better compatibility with a broader range of uses.

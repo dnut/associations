@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import textwrap
-from .libassoc import invert, istr, iint, pretty
+from .libassoc import invert, istr, iint, pretty, make_dir
 
 class Analysis():
 	""" Ideally this class would implement totally generic methods
@@ -12,14 +12,17 @@ class Analysis():
 	objects. This class is an attempt at that but it is still
 	somewhat specialized and may need adaptation for general use.
 	"""
-	def __init__(self, histogram, assoc):
+	def __init__(self, histogram, assoc, output_dir='output', plot_format='pdf'):
 		self.hist = histogram
 		self.assoc = assoc
 		self.plot_counter = 0
 		self.gen_assoc = {}
+		self.output_dir = output_dir
+		self.plot_dir = make_dir(output_dir, 'plots')
 		self.maxes = [('', 1), ('', 1), ('', 1)]
 		self.mins = [('', 1), ('', 1), ('', 1)]
 		self.time = ('age', 'weekday', 'season')
+		self.plot_format = plot_format
 
 	def percent(self, count, total=65499):
 		""" Basic percent calculator outputting nice string """
@@ -35,13 +38,6 @@ class Analysis():
 			i = iint(s[0]) if isinstance(s, tuple) else iint(s)
 			return i if i != None else 999
 		return sorted(bins, key=value)
-
-	def plot_dir(self, folder='plots'):
-		if os.path.isfile(folder):
-			raise OSError('The selected folder name already exists as a file!')
-		if not os.path.isdir(folder):
-			os.makedirs(folder)
-		return folder
 
 	def prep_hist(self, field, other_field, notable=1, subpop=''):
 		""" Filter out irrelevant data for plotting """
@@ -78,8 +74,8 @@ class Analysis():
 		given the names of the fields we want to compare. This is done
 		manually because we are working with already existent bins.
 
-		This method is long in LOC, but it is primarily a single
-		cohesive loop that serves a single purpose.
+		This method is long, but it is primarily a single cohesive
+		loop that serves a single purpose.
 		
 		field: x-axis
 		other_field: legend
@@ -221,7 +217,7 @@ class Analysis():
 		fig = plt.gcf()
 		fig.set_size_inches(25, 15)
 		fig.savefig(
-			self.plot_dir() + '/' + cname + '.pdf',
+			os.path.join(self.plot_dir, cname + '.' + self.plot_format),
 			bbox_inches='tight',
 			dpi=100
 		)
@@ -285,6 +281,19 @@ class Analysis():
 				# to determine how associated each field pair is overall.
 				self.max_helper(one, two)
 
+
+class AsciiTable():
+	""" This grew out of a need to portray specific data that was
+	found using this module. Originally, it was just one method in
+	Analysis(), but that no longer seemed appropriate so it has been
+	split off. It needs some work to become friendly for general use.
+	"""
+	def __init__(self):
+		self.tables = []
+
+	def __str__(self):
+		return '\n\n'.join(self.tables)
+
 	def table(self, *args):
 		""" Create an ascii table out of sections from self.table_section()
 		"""
@@ -312,12 +321,14 @@ class Analysis():
 				else:
 					t.append('│' + item + ' '*(tlen+3 - len(item)) + '│')
 		t.append('└' + hb + '┘')
+		table = '\n'.join(t)
+		self.tables.append(table)
 		return '\n'.join(t)
 
 	def table_section(self, title, *subsects):
 		""" Create a table section from question output that can be
 		properly formatted by self.table()
-
+		
 		For multiple subsects:
 		subsect[0]: subsect title
 		subsect[1]: subsect data
