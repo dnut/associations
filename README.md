@@ -4,7 +4,7 @@ Associations is a Python 3 module used to identify and analyze associations in a
 As you examine this module, you will see there are some aspects of it that could be made more encapsulated, efficient, concise, or generalized. Once I start working on a reference implementation, I will begin to resolve these issues. I urge you to make pull requests if you see anything that could be improved.
 
 ## Installation
-The latest release can be found [here](https://github.com/dnut/associations/releases/latest). [This](https://github.com/dnut/associations/archive/master.zip) is a direct download link for the development version (latest revision, not latest release).
+The latest release can be found [here](https://github.com/dnut/associations/releases/latest). For a direct download of the development version (latest revision, not latest release), click [here](https://github.com/dnut/associations/archive/master.zip).
 
 - **Dependencies**: NumPy, matplotlib, multiprocessing
 - **Build Dependencies**: git (only for Arch Linux python-associations-git package)
