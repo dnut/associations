@@ -139,7 +139,10 @@ Attributes: self.pairs and self.subpops contain all association ratios.
 | ```report()```         | Report associations between two fields.|
 | ```subgroup_report()```| Report associations for any pairs within a subgroup/subpopulation.|
 
-## analysis.py - Analysis()
+## analysis.py
+Contains two classes, Analysis() and AsciiTable()
+
+### Analysis()
 Analyze data from ```Histogram()``` and ```Associations()```.
 
 | Attribute                  | Description |
@@ -157,6 +160,13 @@ Analyze data from ```Histogram()``` and ```Associations()```.
 | ```plot_assoc()```      | Use ```make_hist()``` and ```plot_hist()``` for specific purpose of plotting association ratios between two field names.|
 | ```nice_plot_assoc()``` | Try ```plot_assoc()``` with various ```notable``` values to create a legible plot containing meaningful data.|
 | ```plot_all()```        | Run ```nice_plot_assoc()``` for every field combination.|
+| ```max_helper()```      | Find ```mins``` and ```maxes``` while making hists.|
+
+### AsciiTable()
+| Attribute               | Description |
+| ----------------------- | ----------- |
+| ```tables```            | List of table strings.|
+
+| Method                  | Description |
 | ```table()```           | Draw ascii table.|
 | ```table_section()```   | Format data into a section to be interpreted by ```table()```.|
-| ```max_helper()```      | Find ```mins``` and ```maxes``` while making hists.|
