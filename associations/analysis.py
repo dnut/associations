@@ -340,7 +340,7 @@ class AsciiTable():
 	def __str__(self):
 		return '\n\n'.join(self.tables)
 
-	def table(self, *args):
+	def add_table(self, *args):
 		""" Create an ascii table out of sections from self.table_section()
 		"""
 		formatted = tuple(chain(*[self.table_section(*a) for a in args]))
