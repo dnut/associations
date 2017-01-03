@@ -161,6 +161,9 @@ Analyze data from ```Histogram()``` and ```Associations()```.
 | ```nice_plot_assoc()``` | Try ```plot_assoc()``` with various ```notable``` values to create a legible plot containing meaningful data.|
 | ```plot_all()```        | Run ```nice_plot_assoc()``` for every field combination.|
 | ```max_helper()```      | Find ```mins``` and ```maxes``` while making hists.|
+| ```most_common()```     | Most common occurrences.|
+| ```most_assoc()```      | Most associated occurrences.|
+| ```extremes()```        | Most associated occurrences (broader).|
 
 ### AsciiTable()
 | Attribute               | Description |

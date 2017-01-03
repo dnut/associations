@@ -36,8 +36,51 @@ class Analysis():
 		""" Sort bins according to value of longest int(string[0:?]) """
 		def value(s):
 			i = iint(s[0]) if isinstance(s, tuple) else iint(s)
-			return i if i != None else 999
+			return i if i != None else float('inf')
 		return sorted(bins, key=value)
+
+	def most_common(self, test_group, *subpop):
+		""" Rank test_group by greatest occurrence within subpop. """
+		fields = [self.hist.field_index[val] for val in subpop]
+		hist = self.hist.simplify(test_group, *fields)
+		data = [
+			(test, hist.get(test, *subpop))
+			for test in hist.valists[hist.fieldict[test_group]]
+		]
+		return self.percentify(
+			sorted(data, key=lambda x: -x[1]),
+			total=self.hist.get(*subpop)
+		)
+
+	def most_assoc(self, test_group, value, *subpop):
+		""" Rank test_group by greatest association with value within
+		subpop.
+		"""
+		data, a = [], self.assoc.report(test_group, value)
+		for assoc in a:
+			mutable = set(assoc)
+			mutable.remove(value)
+			data.append((''.join(mutable), a[assoc][frozenset()]))
+		return sorted(data, key=lambda x: -x[1])
+
+	def extremes(self):
+		""" Find absolute most associations within all associations
+		for both specific field values as well as generic field types.
+
+		Return data in format that can be easily interpreted by
+		AsciiTable().
+		"""
+		gens = sorted([(k, self.gen_assoc[k]) for k in self.gen_assoc],
+		              key=lambda x: x[1])
+		fmat = lambda x: [(', '.join(s[:30] for s in i[0]), i[1]) for i in x]
+		gl, gm = fmat(gens[:3]), fmat(gens[:-4:-1])
+		sl, sm = fmat(self.mins), fmat(self.maxes)
+		return (('Generic Associations',
+			('Most Associated', gm),
+			('Least Associated', gl)),
+		('Specific Associations',
+			('Most Associated', sm),
+			('Least Associated', sl)))
 
 	def prep_hist(self, field, other_field, notable=1, subpop=''):
 		""" Filter out irrelevant data for plotting """
@@ -190,6 +233,15 @@ class Analysis():
 					one, two, title, xlabel, bins, notable, subpop, force=True
 				)
 
+	def savefig(self, name):
+		fig = plt.gcf()
+		fig.set_size_inches(25, 15)
+		fig.savefig(
+			os.path.join(self.plot_dir, name + '.' + self.plot_format),
+			bbox_inches='tight',
+			dpi=100
+		)
+
 	def plot_assoc(self, one, two, title=False, xlabel=False,
 		           bins=False, notable=2, subpop='', force=False):
 		""" Plot associations between values one and two. Extract a
@@ -213,14 +265,8 @@ class Analysis():
 			if len(data) > 8:
 				return 'high'
 		self.plot_hist(title, xlabel, ylabel, bins, names, *data, log=log)
-		cname = one +', '+ two + (' for ' + istr(subpop) if subpop else '')
-		fig = plt.gcf()
-		fig.set_size_inches(25, 15)
-		fig.savefig(
-			os.path.join(self.plot_dir, cname + '.' + self.plot_format),
-			bbox_inches='tight',
-			dpi=100
-		)
+		name = one +', '+ two + (' for ' + istr(subpop) if subpop else '')
+		self.savefig(name)
 
 	def max_helper(self, one, two):
 		""" Record most associated specific pairs within the generic

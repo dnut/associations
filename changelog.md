@@ -30,7 +30,11 @@ Clean up excess code, removed old methods, renamed new methods to take their pla
 
 ## ???
 ### New Features
-make_dir()
+- make_dir()
+- most_common()
+- most_assoc()
+- extremes()
+
 ### Improvements
 - Table methods have been split off from Analysis() into its own class, AsciiTable().
 - Use make_dir() and os.path.join() for better compatibility with a broader range of uses.
