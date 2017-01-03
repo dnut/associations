@@ -11,7 +11,7 @@ class Associator():
 	possible. Feed it a simpler histogram to test broader
 	subpopulations.
 	"""
-	def __init__(self, histogram, desired, notable=1, significant=3):
+	def __init__(self, histogram, desired, notable=1, significant=10):
 		# Ratio with average (or inverse) to be included.
 		self.notable = notable
 		# Number of items to be statistically significant.
@@ -91,11 +91,12 @@ class Associator():
 		} } }
 		Return all associations with both data structures: pairs and subpops
 		"""
+		sig = self.significant
 		for pair_type in combinations(self.hist.fields, 2):
 			subpop_type = [f for f in self.hist.fields if f not in pair_type]
 			simple_subpops_hist = self.hist.simplify(*subpop_type)
 			for subpop, subtotal in simple_subpops_hist.nonzeros():
-				if subtotal < self.significant:
+				if subtotal < sig:
 					continue
 				subpop_hist = self.hist.slice(*subpop)
 				mini_hists = [
@@ -103,6 +104,8 @@ class Associator():
 				]
 				for pair, pair_total in subpop_hist.nonzeros():
 					totals = [mini_hists[i].get(f) for i, f in enumerate(pair)]
+					if totals[0] < sig or totals[1] < sig:
+						continue
 					assoc_ratio = pair_total * subtotal / (totals[0] * totals[1])
 					self.add(pair_type, pair, subpop, assoc_ratio)
 		return self.pairs, self.subpops
