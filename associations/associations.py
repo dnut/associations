@@ -102,8 +102,6 @@ class Associator():
 					subpop_hist.simplify(field_type) for field_type in pair_type
 				]
 				for pair, pair_total in subpop_hist.nonzeros():
-					if pair_total < self.significant:
-						continue
 					totals = [mini_hists[i].get(f) for i, f in enumerate(pair)]
 					assoc_ratio = pair_total * subtotal / (totals[0] * totals[1])
 					self.add(pair_type, pair, subpop, assoc_ratio)
