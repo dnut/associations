@@ -28,13 +28,17 @@ Reintroduce support for Associator().notable and Associator().significant.
 ### Improvements
 Clean up excess code, removed old methods, renamed new methods to take their place.
 
-## ???
-### New Features
-- make_dir()
-- most_common()
-- most_assoc()
-- extremes()
-
+## 0.3.0 beta - Presentation (2017-01-03)
+So named because it is this version that is used for the second (and presumably final) submission for the project that initially inspired the development of this module.
 ### Improvements
-- Table methods have been split off from Analysis() into its own class, AsciiTable().
-- Use make_dir() and os.path.join() for better compatibility with a broader range of uses.
+- Better encapsulation and modularity.
+- Better cross-platform compatibility (os.path.join()).
+- Less terrible calculation of statistical significance.
+
+### New Features
+- make_dir(): Create directory if non-existent.
+- most_common(): Rank most common values within specified constraints.
+- most_assoc(): Rank most associated pairs within specified constraints.
+- extremes(): Rank most extreme associations among all data.
+- savefig(): More encapsulated figure saving.
+- AsciiTable(): Table methods have been split off from Analysis() into its own class.

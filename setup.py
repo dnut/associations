@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name='associations',
-	version='0.2.1',
+	version='0.3.0',
 	description='Identify and analyze associations in any data set.',
 	url='',
 	author='Drew Nutter',
