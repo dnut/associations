@@ -14,8 +14,8 @@ class Histogram():
 		self.valdicts = valdicts
 
 	# Methods intended to be overridden by subclasses if needed.
-	def fix_head(head): return head
-	def fix_row(row): return row
+	def fix_head(self, head): return head
+	def fix_row(self, row): return row
 
 	def count(self):
 		""" Run through an entire CSV table and count the number for
