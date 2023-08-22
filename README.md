@@ -1,7 +1,11 @@
 # Associations
-Associations is a Python 3 module used to identify and analyze associations in any data set. It was originally created to aid in solving a specific set of problems. I have not included that original implementation code to respect the employer's wishes.
+Associations is a Python 3 library used to identify high-dimensional statistical relationships in any data set. This library is useful as a first-pass data analysis tool to understand:
+- A high-level overview of every potentional relationship in a data set.
+- Arbitrary dimensionality, identifying the relationships between every combination of elements.
 
-As you examine this module, you will see there are some aspects of it that could be made more encapsulated, efficient, concise, or generalized. Once I start working on a reference implementation, I will begin to resolve these issues. I urge you to make pull requests if you see anything that could be improved.
+This library assigns a relative "association" score for every n*m dimensional relationship of elements in the data set, and optionally outputs some graphs to illustrate those scores. You may use other libraries to apply more advanced or formalized statistical models to understand the finer details of those relationships.
+
+This library has not had any changes since 2017, so it is due for an upgrade. Please open any issues or pull requests to make improvements. In the future, I may make significant breaking changes or fully replace much of the library functionality.
 
 ## Installation
 The latest release can be found [here](https://github.com/dnut/associations/releases/latest). For a direct download of the development version (latest revision, not latest release), click [here](https://github.com/dnut/associations/archive/master.zip).
